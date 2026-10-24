@@ -211,3 +211,58 @@ describe('POST /api/vehicles/:id/purchase', () => {
     expect(response.body.message).toBe('Vehicle is out of stock');
   });
 });
+
+describe('POST /api/vehicles/:id/restock', () => {
+  it('should prevent non-admin users from restocking a vehicle', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'Skoda',
+      model: 'Slavia',
+      category: 'Sedan',
+      price: 1500000,
+      quantity: 2
+    });
+
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicle._id}/restock`)
+      .set('Authorization', `Bearer ${token}`) // Standard user token
+      .send({ quantity: 5 });
+      
+    expect(response.statusCode).toBe(403); 
+  });
+
+  it('should allow admin users to restock a vehicle', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'Volkswagen',
+      model: 'Virtus',
+      category: 'Sedan',
+      price: 1600000,
+      quantity: 3
+    });
+
+    // Generate an admin token for the test
+    const adminUser = await User.create({ 
+      email: 'restockadmin@dealership.com', 
+      password: 'password123',
+      isAdmin: true 
+    });
+    
+    const adminToken = jwt.sign(
+      { userId: adminUser._id }, 
+      process.env.JWT_SECRET || 'testsecret', 
+      { expiresIn: '1h' }
+    );
+
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicle._id}/restock`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ quantity: 5 }); // Adding 5 new cars
+      
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe('Vehicle restocked successfully');
+    expect(response.body.vehicle.quantity).toBe(8); // 3 + 5 = 8
+    
+    // Verify in database
+    const updatedVehicle = await Vehicle.findById(vehicle._id);
+    expect(updatedVehicle.quantity).toBe(8);
+  });
+});
