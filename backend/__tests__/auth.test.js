@@ -1,6 +1,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
+const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 const User = require('../src/models/User');
 
@@ -42,5 +43,30 @@ describe('POST /api/auth/register', () => {
     const userInDb = await User.findOne({ email: 'test@dealership.com' });
     expect(userInDb).toBeTruthy();
     expect(userInDb.email).toBe('test@dealership.com');
+  });
+});
+
+describe('POST /api/auth/login', () => {
+  it('should login an existing user and return a JWT token', async () => {
+    // 1. Manually insert a test user into the database
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+    
+    await User.create({
+      email: 'login@dealership.com',
+      password: hashedPassword
+    });
+
+    // 2. Attempt to hit the login endpoint
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'login@dealership.com',
+        password: 'password123'
+      });
+      
+    // 3. Expect success and a JWT token
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('token');
   });
 });
