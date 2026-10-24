@@ -43,4 +43,25 @@ const searchVehicles = async (req, res) => {
   }
 };
 
-module.exports = { createVehicle, getVehicles, searchVehicles };
+const updateVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // { new: true } ensures we get the updated document back
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(id, req.body, { 
+      new: true,
+      runValidators: true // Ensures Mongoose schema validation rules are applied
+    });
+
+    if (!updatedVehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    res.status(200).json(updatedVehicle);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Don't forget to export it!
+module.exports = { createVehicle, getVehicles, searchVehicles, updateVehicle };
