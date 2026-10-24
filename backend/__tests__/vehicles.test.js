@@ -170,3 +170,44 @@ describe('DELETE /api/vehicles/:id', () => {
     expect(deletedVehicle).toBeNull();
   });
 });
+
+describe('POST /api/vehicles/:id/purchase', () => {
+  it('should decrease the quantity of a vehicle when purchased', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'Kia',
+      model: 'Seltos',
+      category: 'SUV',
+      price: 1400000,
+      quantity: 2
+    });
+
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicle._id}/purchase`)
+      .set('Authorization', `Bearer ${token}`); // Normal user token
+      
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe('Vehicle purchased successfully');
+    expect(response.body.vehicle.quantity).toBe(1);
+    
+    // Verify in database
+    const updatedVehicle = await Vehicle.findById(vehicle._id);
+    expect(updatedVehicle.quantity).toBe(1);
+  });
+
+  it('should return a 400 error if the vehicle is out of stock', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'MG',
+      model: 'Hector',
+      category: 'SUV',
+      price: 1800000,
+      quantity: 0
+    });
+
+    const response = await request(app)
+      .post(`/api/vehicles/${vehicle._id}/purchase`)
+      .set('Authorization', `Bearer ${token}`);
+      
+    expect(response.statusCode).toBe(400);
+    expect(response.body.message).toBe('Vehicle is out of stock');
+  });
+});
