@@ -78,4 +78,38 @@ const deleteVehicle = async (req, res) => {
   }
 };
 
-module.exports = { createVehicle, getVehicles, searchVehicles, updateVehicle, deleteVehicle };
+const purchaseVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const vehicle = await Vehicle.findById(id);
+
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    if (vehicle.quantity <= 0) {
+      return res.status(400).json({ message: 'Vehicle is out of stock' });
+    }
+
+    // Decrease quantity and save
+    vehicle.quantity -= 1;
+    await vehicle.save();
+
+    res.status(200).json({ 
+      message: 'Vehicle purchased successfully', 
+      vehicle 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Don't forget to add it to the exports!
+module.exports = { 
+  createVehicle, 
+  getVehicles, 
+  searchVehicles, 
+  updateVehicle, 
+  deleteVehicle, 
+  purchaseVehicle 
+};
