@@ -62,3 +62,26 @@ describe('GET /api/vehicles', () => {
     expect(response.body.length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('GET /api/vehicles/search', () => {
+  it('should filter vehicles based on query parameters', async () => {
+    // Seed some specific vehicles for the search test
+    await Vehicle.create([
+      { make: 'Tata', model: 'Nexon', category: 'SUV', price: 1200000, quantity: 3 },
+      { make: 'Mahindra', model: 'Thar', category: 'SUV', price: 1500000, quantity: 2 }
+    ]);
+
+    // Test searching for 'Tata'
+    const response = await request(app)
+      .get('/api/vehicles/search?make=Tata')
+      .set('Authorization', `Bearer ${token}`);
+      
+    expect(response.statusCode).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body[0].make).toBe('Tata');
+    
+    // Ensure Mahindra isn't returned
+    const mahindraCheck = response.body.find(v => v.make === 'Mahindra');
+    expect(mahindraCheck).toBeUndefined();
+  });
+});
