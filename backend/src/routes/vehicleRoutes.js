@@ -1,10 +1,11 @@
 const express = require('express');
-const { createVehicle } = require('../controllers/vehicleController');
+const { createVehicle, getVehicles } = require('../controllers/vehicleController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// The "protect" middleware runs first to check the token
+// Both routes are protected by our JWT middleware
 router.post('/', protect, createVehicle);
+router.get('/', protect, getVehicles);
 
 module.exports = router;
