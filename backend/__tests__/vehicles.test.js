@@ -4,6 +4,7 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const jwt = require('jsonwebtoken');
 const app = require('../src/app');
 const User = require('../src/models/User');
+const Vehicle = require('../src/models/Vehicle');
 
 let mongoServer;
 let token;
@@ -39,5 +40,25 @@ describe('POST /api/vehicles', () => {
     expect(response.statusCode).toBe(201);
     expect(response.body).toHaveProperty('_id');
     expect(response.body.make).toBe('Toyota');
+  });
+});
+
+describe('GET /api/vehicles', () => {
+  it('should fetch all available vehicles when authenticated', async () => {
+    // 1. Manually seed the database with a couple of vehicles
+    await Vehicle.create([
+      { make: 'Honda', model: 'Civic', category: 'Sedan', price: 20000, quantity: 2 },
+      { make: 'Ford', model: 'Mustang', category: 'Coupe', price: 35000, quantity: 1 }
+    ]);
+
+    // 2. Attempt to fetch them via the API
+    const response = await request(app)
+      .get('/api/vehicles')
+      .set('Authorization', `Bearer ${token}`);
+      
+    // 3. Expect success and an array of data
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBeTruthy();
+    expect(response.body.length).toBeGreaterThanOrEqual(2);
   });
 });
