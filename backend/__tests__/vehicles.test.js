@@ -85,3 +85,34 @@ describe('GET /api/vehicles/search', () => {
     expect(mahindraCheck).toBeUndefined();
   });
 });
+
+describe('PUT /api/vehicles/:id', () => {
+  it('should update an existing vehicle when authenticated', async () => {
+    // 1. Create a vehicle to update
+    const vehicle = await Vehicle.create({
+      make: 'Hyundai',
+      model: 'Creta',
+      category: 'SUV',
+      price: 1600000,
+      quantity: 4
+    });
+
+    // 2. Send the PUT request with updated data
+    const response = await request(app)
+      .put(`/api/vehicles/${vehicle._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        price: 1650000, // Price hike
+        quantity: 5     // Restocked one
+      });
+      
+    // 3. Assertions
+    expect(response.statusCode).toBe(200);
+    expect(response.body.price).toBe(1650000);
+    expect(response.body.quantity).toBe(5);
+    
+    // 4. Verify in database
+    const updatedVehicle = await Vehicle.findById(vehicle._id);
+    expect(updatedVehicle.price).toBe(1650000);
+  });
+});
