@@ -63,5 +63,19 @@ const updateVehicle = async (req, res) => {
   }
 };
 
-// Don't forget to export it!
-module.exports = { createVehicle, getVehicles, searchVehicles, updateVehicle };
+const deleteVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedVehicle = await Vehicle.findByIdAndDelete(id);
+
+    if (!deletedVehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    res.status(200).json({ message: 'Vehicle deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { createVehicle, getVehicles, searchVehicles, updateVehicle, deleteVehicle };

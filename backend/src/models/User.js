@@ -9,6 +9,12 @@ const userSchema = new mongoose.Schema({
   password: { 
     type: String, 
     required: true 
+  },
+  // NEW: Admin flag
+  isAdmin: {
+    type: Boolean,
+    required: true,
+    default: false
   }
 });
 
