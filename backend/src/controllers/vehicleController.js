@@ -104,12 +104,40 @@ const purchaseVehicle = async (req, res) => {
   }
 };
 
-// Don't forget to add it to the exports!
+const restockVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+
+    const vehicle = await Vehicle.findById(id);
+
+    if (!vehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ message: 'Must provide a valid quantity to restock' });
+    }
+
+    vehicle.quantity += Number(quantity);
+    await vehicle.save();
+
+    res.status(200).json({ 
+      message: 'Vehicle restocked successfully', 
+      vehicle 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update the exports to include restockVehicle
 module.exports = { 
   createVehicle, 
   getVehicles, 
   searchVehicles, 
   updateVehicle, 
   deleteVehicle, 
-  purchaseVehicle 
+  purchaseVehicle,
+  restockVehicle
 };

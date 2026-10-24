@@ -5,7 +5,8 @@ const {
   searchVehicles, 
   updateVehicle, 
   deleteVehicle,
-  purchaseVehicle // NEW: Import the controller
+  purchaseVehicle,
+  restockVehicle // Import the new controller
 } = require('../controllers/vehicleController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -16,8 +17,9 @@ router.get('/', protect, getVehicles);
 router.get('/search', protect, searchVehicles);
 router.put('/:id', protect, updateVehicle);
 router.delete('/:id', protect, admin, deleteVehicle);
-
-// NEW: Purchase route (standard users can access this)
 router.post('/:id/purchase', protect, purchaseVehicle);
+
+// NEW: Restock route requires both protect AND admin middleware
+router.post('/:id/restock', protect, admin, restockVehicle);
 
 module.exports = router;
