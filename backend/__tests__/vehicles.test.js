@@ -116,3 +116,57 @@ describe('PUT /api/vehicles/:id', () => {
     expect(updatedVehicle.price).toBe(1650000);
   });
 });
+
+describe('DELETE /api/vehicles/:id', () => {
+  it('should prevent non-admin users from deleting a vehicle', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'Maruti',
+      model: 'Swift',
+      category: 'Hatchback',
+      price: 800000,
+      quantity: 2
+    });
+
+    // Using the standard 'token' from beforeAll (normal user)
+    const response = await request(app)
+      .delete(`/api/vehicles/${vehicle._id}`)
+      .set('Authorization', `Bearer ${token}`);
+      
+    // 403 Forbidden since they are authenticated but lack admin privileges
+    expect(response.statusCode).toBe(403); 
+  });
+
+  it('should allow admin users to delete a vehicle', async () => {
+    const vehicle = await Vehicle.create({
+      make: 'Honda',
+      model: 'City',
+      category: 'Sedan',
+      price: 1200000,
+      quantity: 1
+    });
+
+    // Create an admin user on the fly for this test
+    const adminUser = await User.create({ 
+      email: 'superadmin@dealership.com', 
+      password: 'password123',
+      isAdmin: true // We will add this to the schema in the green phase
+    });
+    
+    const adminToken = jwt.sign(
+      { userId: adminUser._id }, 
+      process.env.JWT_SECRET || 'testsecret', 
+      { expiresIn: '1h' }
+    );
+
+    const response = await request(app)
+      .delete(`/api/vehicles/${vehicle._id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+      
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe('Vehicle deleted');
+    
+    // Verify it is actually gone from the DB
+    const deletedVehicle = await Vehicle.findById(vehicle._id);
+    expect(deletedVehicle).toBeNull();
+  });
+});
