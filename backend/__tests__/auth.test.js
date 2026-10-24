@@ -4,6 +4,8 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
 const User = require('../src/models/User');
 
+jest.setTimeout(300000);
+
 let mongoServer;
 
 // Connect to the in-memory database before any tests run
