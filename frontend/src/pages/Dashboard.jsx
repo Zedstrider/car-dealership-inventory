@@ -5,6 +5,14 @@ import axios from '../api/axios';
 export default function Dashboard() {
   const [vehicles, setVehicles] = useState([]);
   const [error, setError] = useState('');
+  const [filters, setFilters] = useState({
+    make: '',
+    model: '',
+    category: '',
+    minPrice: '',
+    maxPrice: ''
+  });
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,10 +32,30 @@ export default function Dashboard() {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    try {
+      // Axios automatically serializes the params object into a query string
+      const { data } = await axios.get('/vehicles/search', { params: filters });
+      setVehicles(data);
+      setError('');
+    } catch (err) {
+      setError('Failed to apply filters.');
+    }
+  };
+
+  const handleReset = () => {
+    setFilters({ make: '', model: '', category: '', minPrice: '', maxPrice: '' });
+    fetchVehicles();
+  };
+
   const handlePurchase = async (id) => {
     try {
       await axios.post(`/vehicles/${id}/purchase`);
-      fetchVehicles(); // Refresh the list to update quantities
+      // Re-run the current search/fetch to get updated quantities
+      filters.make || filters.model || filters.category || filters.minPrice || filters.maxPrice 
+        ? handleSearch(new Event('submit')) 
+        : fetchVehicles();
     } catch (err) {
       alert(err.response?.data?.message || 'Error purchasing vehicle');
     }
@@ -50,6 +78,67 @@ export default function Dashboard() {
             Logout
           </button>
         </div>
+
+        {/* Search & Filter Section */}
+        <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Make</label>
+            <input 
+              type="text" 
+              value={filters.make} 
+              onChange={(e) => setFilters({...filters, make: e.target.value})} 
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="e.g. Tata" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Model</label>
+            <input 
+              type="text" 
+              value={filters.model} 
+              onChange={(e) => setFilters({...filters, model: e.target.value})} 
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="e.g. Nexon" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Category</label>
+            <input 
+              type="text" 
+              value={filters.category} 
+              onChange={(e) => setFilters({...filters, category: e.target.value})} 
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="SUV, Sedan..." 
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Min Price (₹)</label>
+            <input 
+              type="number" 
+              value={filters.minPrice} 
+              onChange={(e) => setFilters({...filters, minPrice: e.target.value})} 
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
+              placeholder="0" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Max Price (₹)</label>
+            <input 
+              type="number" 
+              value={filters.maxPrice} 
+              onChange={(e) => setFilters({...filters, maxPrice: e.target.value})} 
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none" 
+            />
+          </div>
+          <div className="flex space-x-2">
+            <button type="submit" className="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition-colors">
+              Filter
+            </button>
+            <button type="button" onClick={handleReset} className="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition-colors">
+              Reset
+            </button>
+          </div>
+        </form>
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -82,7 +171,7 @@ export default function Dashboard() {
           ))}
           
           {vehicles.length === 0 && !error && (
-            <p className="text-gray-500 col-span-full text-center py-8">No vehicles found in inventory.</p>
+            <p className="text-gray-500 col-span-full text-center py-8">No vehicles found matching your criteria.</p>
           )}
         </div>
       </div>
