@@ -23,7 +23,7 @@ const protect = (req, res, next) => {
 // NEW: Admin authorization check
 const admin = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user.id);
     if (user && user.isAdmin) {
       next();
     } else {
