@@ -49,7 +49,7 @@ const loginUser = async (req, res) => {
         id: user._id, 
         isAdmin: user.isAdmin // <-- THIS IS CRUCIAL 
       }, 
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'testsecret',
       { expiresIn: '1d' }
     );
 

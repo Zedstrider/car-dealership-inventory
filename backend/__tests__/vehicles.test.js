@@ -153,7 +153,7 @@ describe('DELETE /api/vehicles/:id', () => {
     });
     
     const adminToken = jwt.sign(
-      { userId: adminUser._id }, 
+      { id: adminUser._id, isAdmin: true }, 
       process.env.JWT_SECRET || 'testsecret', 
       { expiresIn: '1h' }
     );
@@ -246,11 +246,7 @@ describe('POST /api/vehicles/:id/restock', () => {
       isAdmin: true 
     });
     
-    const adminToken = jwt.sign(
-      { userId: adminUser._id }, 
-      process.env.JWT_SECRET || 'testsecret', 
-      { expiresIn: '1h' }
-    );
+    const adminToken = jwt.sign({ id: adminUser._id, isAdmin: true }, process.env.JWT_SECRET || 'testsecret');
 
     const response = await request(app)
       .post(`/api/vehicles/${vehicle._id}/restock`)
